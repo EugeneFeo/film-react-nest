@@ -37,7 +37,7 @@ export class FilmsService {
     const items = film.schedule.map((session) => ({
       id: session.id,
       daytime: session.daytime,
-      hall: String(session.hall),
+      hall: Number(session.hall),
       rows: session.rows,
       seats: session.seats,
       price: session.price,
