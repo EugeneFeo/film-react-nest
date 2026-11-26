@@ -41,4 +41,18 @@ export class FilmsRepository implements OnModuleInit {
 
     return result.modifiedCount === 1;
   }
+
+  async releaseSeat(filmId: string, sessionId: string, place: string) {
+    await this.filmModel.updateOne(
+      {
+        id: filmId,
+        'schedule.id': sessionId,
+      },
+      {
+        $pull: {
+          'schedule.$.taken': place,
+        },
+      },
+    );
+  }
 }

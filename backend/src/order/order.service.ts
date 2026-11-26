@@ -53,23 +53,39 @@ export class OrderService {
       places.add(key);
     }
 
-    for (const ticket of order.tickets) {
-      const place = `${ticket.row}:${ticket.seat}`;
+    try {
+      for (const ticket of order.tickets) {
+        const place = `${ticket.row}:${ticket.seat}`;
 
-      const booked = await this.filmsRepository.bookSeat(
-        ticket.film,
-        ticket.session,
-        place,
+        const item = {
+          ...ticket,
+          id: randomUUID(),
+        };
+
+        const booked = await this.filmsRepository.bookSeat(
+          ticket.film,
+          ticket.session,
+          place,
+        );
+
+        if (!booked) {
+          throw new BadRequestException({ error: 'Место уже занято' });
+        }
+
+        items.push(item);
+      }
+    } catch (error) {
+      await Promise.allSettled(
+        items.map((ticket) =>
+          this.filmsRepository.releaseSeat(
+            ticket.film,
+            ticket.session,
+            `${ticket.row}:${ticket.seat}`,
+          ),
+        ),
       );
 
-      if (!booked) {
-        throw new BadRequestException({ error: 'Место уже занято' });
-      }
-
-      items.push({
-        ...ticket,
-        id: randomUUID(),
-      });
+      throw error;
     }
 
     return {
